@@ -1,0 +1,1 @@
+Software feito como o intuito de construir histogramas para a disciplina de Física Experimental I.
