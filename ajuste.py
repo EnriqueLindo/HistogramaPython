@@ -33,6 +33,7 @@ for c in range(n):
 
     k = k.split(";")
 
+
     x.append(float(k[0]))
     sigma_x.append(float(k[1]))
 
@@ -113,8 +114,8 @@ b = myRound(linearCoef)
 sigmaA = myRound(sigmaAngular)
 sigmaB = myRound(sigmaLinear)
 
-print("A= " + str(a) + " +- " + str(sigmaA))
-print("B= " + str(b) + " +- " + str(sigmaB))
+print("Coef Angular= " + str(a) + " +- " + str(sigmaA))
+print("Coef Linear= " + str(b) + " +- " + str(sigmaB))
 
 #Calculating the remainders
 remainders = []
