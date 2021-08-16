@@ -27,7 +27,7 @@ def calcMMM():
         if(c[1] > fModa):
             moda, fModa = c[0], c[1]
 
-    media = round(media/numData, precision)
+    #media = round(media/numData, precision)
     #Calculando a mediana
     if(len(histogram) % 2 == 0):
         mediana = histogram[len(histogram) // 2]
@@ -49,7 +49,7 @@ def calcDp():
 
 def constructHist():
     global nBins, media
-    nBins = int(math.sqrt(numData))
+    nBins = math.ceil((math.sqrt(numData)))
     interSz = round((frequency[len(frequency)-1][0] - frequency[0][0])/nBins, 3)
 
     intervalos = []
