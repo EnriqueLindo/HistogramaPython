@@ -20,6 +20,8 @@ class MeuApp(Tk.Frame):
         textoAjuda += "Se precisar adiconar incertezas, utilize ';' para separá-las de seu valor correspondente. Da seguinte forma: valor1;incertezaValor1\n\nNo caso de construção de retas de ajuste, onde se faz necessário "
         textoAjuda += "a presença dos valores x e y, coloque primeiro todos os valores de x e suas incertezas e imediatamente após os valores de y da seguinte forma:\nvalor_x1;incerteza_x1\nvalor_x2;incerteza_x2\nvalor_xk;incerteza_xk\n"
         textoAjuda += "valor_y1;incerteza_y1\nvalor_y2;incerteza_y2\nvalor_yk;incerteza_yk\n\nVale ressaltar que os números devem ser expressos com '.' em vez de ','. Portanto o valor 1,234 está errado, o correto seria 1.234\n\nBom uso do programa! =D"
+        
+        self.output.delete('1.0', Tk.END)
         self.output.insert('end', textoAjuda)
 
     def browseFunc(self, destin):
@@ -59,6 +61,7 @@ class MeuApp(Tk.Frame):
         if options["ajuste"]:
             textoResposta += "Coeficiente Angular = " + str(respAjuste[0]) + " ± " + str(respAjuste[2]) + "\n" + "Coeficiente linear = " + str(respAjuste[1]) + " ± " + str(respAjuste[3])
         
+        self.output.delete('1.0', Tk.END)
         self.output.insert('end', textoResposta)
 
     def create_widgets(self):
