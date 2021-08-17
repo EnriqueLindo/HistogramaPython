@@ -6,7 +6,7 @@ from matplotlib.ticker import FormatStrFormatter
 frequency = []
 #Lista com todas as amostras, usada para construir o histograma
 histogram = []
-precision = 2
+precision = 3
 fModa = 0
 
 numData = 0
@@ -28,6 +28,7 @@ def calcMMM():
             moda, fModa = c[0], c[1]
 
     #media = round(media/numData, precision)
+    media = media/numData
     #Calculando a mediana
     if(len(histogram) % 2 == 0):
         mediana = histogram[len(histogram) // 2]
@@ -49,16 +50,15 @@ def calcDp():
 
 def constructHist():
     global nBins, media
-    nBins = math.ceil((math.sqrt(numData)))
+    nBins = math.ceil((math.sqrt(numData)))  
     interSz = round((frequency[len(frequency)-1][0] - frequency[0][0])/nBins, 3)
 
     intervalos = []
     for c in range(nBins+2):
-        i = round(frequency[0][0] + c * interSz, 3)
+        i = frequency[0][0] + c * interSz
         intervalos.append(i)
 
     #Configurando o histograma
-
     interMedia = []
     alturaMedia = 0
 
@@ -67,6 +67,7 @@ def constructHist():
             interMedia.append(intervalos[c-1])
             interMedia.append(intervalos[c])
             break
+
     for c in frequency:
         if interMedia[1] > c[0] >= interMedia[0]:
             alturaMedia += c[1]
@@ -84,7 +85,7 @@ def constructHist():
     ax.xaxis.set_major_formatter(FormatStrFormatter(fPoint))
 
     #graph.hist(x=histograma, bins=nBins)
-    graph.hist(x=histogram, bins=intervalos)
+    graph.hist(x=histogram, bins=intervalos, edgecolor='black', linewidth=1.2)
 
     x1, y1 = [media, media], [0, alturaMedia]
 
@@ -95,8 +96,25 @@ def constructHist():
     graph.ylabel(tituloY)
     graph.show()
 
+def resetVariables():
+    global frequency, histogram, precision, fModa, numData, media, moda, mediana, dp, dpMedia, nBins
 
+    frequency = []
+    histogram = []
+    precision = 3
+    fModa = 0
+    numData = 0
+    media = 0
+    moda = 0
+    mediana = 0
+    dp = 0
+    dpMedia = 0
+    nBins = 0
+
+#Main func
 def execute(sourceFile, options):
+    global precision
+
     arq = open(sourceFile, "r")
     reading = True
     while reading:
@@ -105,7 +123,11 @@ def execute(sourceFile, options):
         if(y == ""):
             reading = False
         else:
-            y = float(y)
+            try:
+                y = float(y)
+            except:
+                y = y.split(";")
+                y = float(y[0])
 
             histogram.append(y)
 
@@ -119,22 +141,38 @@ def execute(sourceFile, options):
             if (f == 0):
                 frequency.append([y, 1])
 
+    try:
+        precision = str(histogram[0]).split(".")
+        precision = list(precision[1])
+        precision = len(precision)
+        if precision > 4:
+            precision = 4
+    except:
+        pass
+
     frequency.sort()
     histogram.sort()
     calcMMM()
     calcDp()
-    constructHist()
 
-    print('===============================')
-    print("O numero de dados é: ", numData)
-    print("A média é: ", media)
-    print("A moda é: ", moda)
-    print("A mediana é: ", mediana)
-    print("O desvio padrão é: ", dp)
-    print("O desvio padrão da média é: ", dpMedia)
-    print("O menor valor é: ", frequency[0][0])
-    print("O maior valor é: ", frequency[len(frequency)-1][0])
-    print("O numero de bins é: ", nBins)
+    if options["hist"]:
+        constructHist()
 
-    for c in frequency:
-        print(c)
+    resposta = {"numDados": None, "media": None, "moda": None, "mediana": None, 
+               "dp": None, "dpM": None, "min": None, "max": None, "freq": None}
+
+    resposta["numDados"] = numData
+    resposta["media"] = media
+    resposta["moda"] = moda
+    resposta["mediana"] = mediana
+    resposta["dp"] = dp
+    resposta["dpM"] = dpMedia
+    resposta["min"] = frequency[0][0]
+    resposta["max"] = frequency[len(frequency)-1][0]
+    resposta["freq"] = frequency
+
+    resetVariables()
+
+    return resposta
+
+#execute("hist.txt", {"hist": True})

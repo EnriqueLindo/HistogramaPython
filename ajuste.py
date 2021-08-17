@@ -2,13 +2,10 @@ from math import sqrt
 import matplotlib.pyplot as plt
 import estatistica
 
-full = str(input("Deseja uma resposta completa? (S/N)")).upper()
-
-f = open("ajuste.txt", "r")
-
+plt.style.use('bmh')
 
 #Variables
-n = int(f.readline())
+n = 0
 
 x = []
 sigma_x = []
@@ -25,33 +22,13 @@ xSquaredSum = 0
 xySum = 0
 sigmaSum = 0
 
-#Reading values from file
-for c in range(n):
-    k = list(f.readline())
-    k = k[:len(k)-1]
-    k = ''.join(k)
+remainders = []
+rem_percentage = []
 
-    k = k.split(";")
-
-
-    x.append(float(k[0]))
-    sigma_x.append(float(k[1]))
-
-    xSquared.append(float(k[0])**2)
-
-for c in range(n):
-    k = list(f.readline())
-    k = k[:len(k)-1]
-    k = ''.join(k)
-
-    k = k.split(";")
-
-    y.append(float(k[0]))
-    sigma_y.append(float(k[1]))
-
-    xy.append(x[c] * float(k[0]))
-
+#Auxiliar func
 def sum(array):
+    global sigma_y
+
     sum = 0
     for c in range(len(array)):
         sum += array[c] / (sigma_y[c]**2)
@@ -64,36 +41,6 @@ def mod(x):
     
     return x
 
-#Calculating the sum
-xSum = sum(x)
-ySum = sum(y)
-xSquaredSum = sum(xSquared)
-xySum = sum(xy)
-sigmaSum = sum([1]*n)
-
-#Calculating the coeficients
-linearCoef = (ySum * xSquaredSum - xSum * xySum) / (sigmaSum * xSquaredSum - xSum**2)
-angularCoef = (sigmaSum * xySum - xSum * ySum) / (sigmaSum * xSquaredSum - xSum**2)
-
-
-#Calculating sigmaY (for delta and deltasquared, might delete later...)
-delta = []
-deltaSquared = []
-for c in range(n):
-    delta.append((y[c] - linearCoef - angularCoef * x[c]))
-    deltaSquared.append( (y[c] - linearCoef - angularCoef * x[c])**2 )
-
-sigmaY = sqrt(sum(deltaSquared)/(n-2))
-
-
-#Calculating sigmaA and sigmaB
-#sigmaLinear = sigmaY * sqrt(mod(xSquaredSum / (sigmaSum * xSquaredSum - xSum**2)))
-#sigmaAngular = sigmaY * sqrt(mod(sigmaSum / (sigmaSum * xSquaredSum - xSum**2)))
-
-sigmaLinear = (mod(xSquaredSum / (sigmaSum * xSquaredSum - xSum**2)))
-sigmaAngular = (mod(sigmaSum / (sigmaSum * xSquaredSum - xSum**2)))
-
-#Rouding to 2 significant algarisms
 def myRound(z):
     k = str(z).split(".")
     k = list(k[1])
@@ -107,59 +54,133 @@ def myRound(z):
 
     return round(z, 2 + sigAlg)
 
-#Printing the results
-a = myRound(angularCoef)
-b = myRound(linearCoef)
+def calcSum():
+    global xSum, ySum, xSquaredSum, xySum, sigmaSum, x, y, xSquared, xy, n
 
-sigmaA = myRound(sigmaAngular)
-sigmaB = myRound(sigmaLinear)
+    xSum = sum(x)
+    ySum = sum(y)
+    xSquaredSum = sum(xSquared)
+    xySum = sum(xy)
+    sigmaSum = sum([1]*n)
 
-print("Coef Angular= " + str(a) + " +- " + str(sigmaA))
-print("Coef Linear= " + str(b) + " +- " + str(sigmaB))
+def countSigAlg(x):
+    x = str(x).split(".")
 
-#Calculating the remainders
-remainders = []
-rem_percentage = []
-for c in range(len(y)):
-    expectedY = linearCoef + angularCoef * x[c]
+    return len(x[1])
 
-    r = (y[c] - (expectedY)) / sigma_y[c]
-    remainders.append(r)
+def resetVariables():
+    global n, x, sigma_x, y, sigma_y, xSquared, xy, xSum, ySum, xSquaredSum, xySum, sigmaSum, remainders, rem_percentage
 
-    p = r/expectedY * 100
-    rem_percentage.append(p)
-
-
-if full == "S":
-    print("======IMPRIMINDO RESPOSTA COMPLETA======")
-
-    print("x = ", x)
-    print("Σx = ", xSum)
-    print()
-
-    print("y = ", y)
-    print("Σy = ", ySum)
-    print()
-
-    print("x² = ", xSquared)
-    print("Σx² = ", xSquaredSum)
-    print()
-
-    print("xy = ", xy)
-    print("Σxy = ", xySum)
-    print()
-
-    print("Δ = ", delta)
-    print("ΣΔ = ", sum(delta))
-    print()
-
-    print("Δ² = ", deltaSquared)
-    print("ΣΔ² = ", sum(deltaSquared))
-    print()
+    n = 0
+    x = []
+    sigma_x = []
+    y = []
+    sigma_y = []
+    xSquared = []
+    xy = []
+    xSum = 0
+    ySum = 0
+    xSquaredSum = 0
+    xySum = 0
+    sigmaSum = 0
+    remainders = []
+    rem_percentage = []
 
 
-def constructGraph():
-    plt.style.use('bmh')
+#Actual func
+def readFile(sourceFile):
+    global n, x, sigma_x, y, sigma_y, xSquared, xy
+
+    f = open(sourceFile, "r")
+    while True:
+        if f.readline() != "":
+            n += 1
+        else:
+            break
+    f.close()
+
+    n = n//2
+
+    f = open(sourceFile, "r")
+
+    values = f.readlines()
+    xValues = values[0:n]
+    yValues = values[n:]
+
+    for c in range(n):
+        k = list(xValues[c])
+
+        if c != n-1:
+            k = k[:len(k)-1]
+
+        k = ''.join(k)
+        k = k.split(";")
+
+        x.append(float(k[0]))
+        if len(k) > 1:            
+            sigma_x.append(float(k[1]))
+        else:
+            sigma_x.append(1.0)            
+
+        xSquared.append(float(k[0])**2)
+
+    for c in range(n):
+        k = list(yValues[c])
+
+        if c != n-1:
+            k = k[:len(k)-1]
+
+        k = ''.join(k)
+        k = k.split(";")
+
+        y.append(float(k[0]))
+        if len(k) > 1:            
+            sigma_y.append(float(k[1]))
+        else:
+            sigma_y.append(1.0)  
+
+        xy.append(x[c] * float(k[0]))
+
+    f.close()
+
+def calcCoef():
+    global ySum, xSquaredSum, xSum, xySum, sigmaSum
+
+    linearCoef = (ySum * xSquaredSum - xSum * xySum) / (sigmaSum * xSquaredSum - xSum**2)
+    angularCoef = (sigmaSum * xySum - xSum * ySum) / (sigmaSum * xSquaredSum - xSum**2)
+
+    sigmaLinear = (mod(xSquaredSum / (sigmaSum * xSquaredSum - xSum**2)))
+    sigmaAngular = (mod(sigmaSum / (sigmaSum * xSquaredSum - xSum**2)))
+
+    return [linearCoef, sigmaLinear], [angularCoef, sigmaAngular]
+
+def calcRemainders(linearCoef, angularCoef):
+    global y, remainders, rem_percentage, sigma_y, x
+    for c in range(len(y)):
+        expectedY = linearCoef + angularCoef * x[c]
+
+        r = (y[c] - expectedY) / sigma_y[c]
+        remainders.append(r)
+
+        p = r/expectedY * 100
+        rem_percentage.append(p)
+
+def constructHistRem():
+    global remainders
+
+    f = open("hist.txt", "w")
+    for c in remainders:
+        f.write(str(c))
+
+        if c != remainders[len(remainders) - 1]:
+            f.write("\n")
+
+    f.close()
+
+    estatistica.execute("hist.txt", {"hist": True})
+
+def constructGraph(linearCoef, angularCoef):
+    global x, y, sigma_x, sigma_y
 
     plt.plot(x, y, 'ro')
 
@@ -175,6 +196,8 @@ def constructGraph():
     plt.show()
 
 def construcRemG():
+    global rem_percentage
+
     xaxis = []
     for c in range(len(rem_percentage)):
         xaxis.append(c+1)
@@ -188,19 +211,42 @@ def construcRemG():
 
     plt.show()
 
-#Constructing the graph with de adjust line
-constructGraph()
-#Constructing the graph of remainders
-construcRemG()
+#Main func
+def execute(sourceFile, opts):
+    readFile(sourceFile)
+    calcSum()
 
-#Constructing the histogram of remainders
-f = open("hist.txt", "w")
-for c in remainders:
-    f.write(str(c))
+    linearCoef, angCoef = calcCoef()
 
-    if c != remainders[len(remainders) - 1]:
-        f.write("\n")
+    ang = myRound(angCoef[0])
+    lin = myRound(linearCoef[0])
 
-f.close()
+    sigmaAng = round(angCoef[1], countSigAlg(ang))
+    sigmaLin = round(linearCoef[1], countSigAlg(lin))
 
-estatistica.execute("hist.txt", [])
+    #Constructing the graph with de adjust line
+    if opts["ajuste"]:
+        constructGraph(lin, ang)
+    #Constructing the graph of remainders
+    if opts["grafResi"]:
+        calcRemainders(lin, ang)
+        construcRemG()
+    #Constructing the histogram of remainders
+    if opts["grafResi"]:
+        constructHistRem()
+
+    #Reseting the variables
+    resetVariables()
+
+    return ang, lin, sigmaAng, sigmaLin
+
+#Calculating sigmaY (for delta and deltasquared, might delete later...)
+'''
+delta = []
+deltaSquared = []
+for c in range(n):
+    delta.append((y[c] - linearCoef - angularCoef * x[c]))
+    deltaSquared.append( (y[c] - linearCoef - angularCoef * x[c])**2 )
+
+sigmaY = sqrt(sum(deltaSquared)/(n-2))
+'''
